@@ -13,7 +13,7 @@ from threading import Thread
 from pgscout.cache import get_cached_count
 from pgscout.config import cfg_get
 from pgscout.stats import get_pokemon_stats
-from pgscout.utils import get_pokemon_name, rss_mem_size
+from pgscout.utils import get_pokemon_name, rss_mem_size, app_state
 
 
 def input_processor(state):
@@ -31,6 +31,8 @@ def input_processor(state):
         elif command == 'p':
             state['display'] = 'pokemon'
             state['page'] = 1
+        elif command == 't':
+            app_state.toggle_new_requests()
         elif command == '':
             # Toggle between scouts and log view
             state['display'] = 'scouts' if state['display'] == 'logs' else 'logs'
@@ -64,8 +66,8 @@ def print_status(scouts, initial_display, jobs):
 
         lines = []
         lines.append(
-            "Job queue length: {} | Cached encounters: {} | Mem Usage: {}".format(
-                jobs.qsize(), get_cached_count(), rss_mem_size()))
+            "Accepting requests: {} | Job queue length: {} | Cached encounters: {} | Mem Usage: {}".format(
+                app_state.accept_new_requests, jobs.qsize(), get_cached_count(), rss_mem_size()))
 
         if state['display'] == 'scouts':
             total_pages = print_scouts(lines, state, scouts)
@@ -74,7 +76,8 @@ def print_status(scouts, initial_display, jobs):
 
         # Footer
         lines.append('Page {}/{}. Page number to switch pages. <enter> to '
-                     'toggle log view. "p" for Pokemon stats.'.format(
+                     'toggle log view. "p" for Pokemon stats.'
+                     ' "t" to toggle accepting new requests.'.format(
             state['page'], total_pages))
 
         # Print lines
@@ -93,6 +96,7 @@ def print_scouts(lines, state, scouts):
                                     warn_str, active,
                                     scout.total_encounters,
                                     "{:5.1f}".format(scout.encounters_per_hour),
+                                    scout.errors,
                                     hr_tstamp(scout.previous_encounter),
                                     scout.last_msg)
         else:
@@ -101,6 +105,7 @@ def print_scouts(lines, state, scouts):
                                     warn_str, active,
                                     scout.total_encounters,
                                     "{:5.1f}".format(scout.encounters_per_hour),
+                                    scout.errors,
                                     hr_tstamp(scout.previous_encounter),
                                     scout.last_msg)
 
@@ -108,13 +113,13 @@ def print_scouts(lines, state, scouts):
                               map(lambda s: len(s.acc.username), scouts)))
     len_num = str(len(str(len(scouts))))
     if cfg_get('proxies'):
-        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:25} | {:4} | {:6} | {:10} | {:5} | {:14} | {}'
+        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:25} | {:4} | {:6} | {:10} | {:5} | {:6} |{:14} | {}'
         lines.append(
-            line_tmpl.format('#', 'Scout', 'Proxy', 'Warn', 'Active', 'Encounters', 'Enc/h',
+            line_tmpl.format('#', 'Scout', 'Proxy', 'Warn', 'Active', 'Encounters', 'Enc/h', 'Errors',
                              'Last Encounter', 'Message'))
     else:
-        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:4} | {:6} | {:10} | {:5} | {:14} | {}'
-        lines.append(line_tmpl.format('#', 'Scout', 'Warn', 'Active', 'Encounters', 'Enc/h',
+        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:4} | {:6} | {:10} | {:5} | {:6} | {:14} | {}'
+        lines.append(line_tmpl.format('#', 'Scout', 'Warn', 'Active', 'Encounters', 'Enc/h', 'Errors',
                                       'Last Encounter', 'Message'))
     return print_lines(lines, scout_line, scouts, 4, state)
 
