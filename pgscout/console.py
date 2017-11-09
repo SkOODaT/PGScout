@@ -15,10 +15,11 @@ from pgscout.config import cfg_get
 from pgscout.stats import get_pokemon_stats
 from pgscout.utils import get_pokemon_name, rss_mem_size, app_state
 
+default_log_level = 0
 
 def input_processor(state):
     mainlog = logging.getLogger()
-    default_log_level = mainlog.getEffectiveLevel()
+    global default_log_level
 
     while True:
         # Wait for the user to press a key.
@@ -47,11 +48,17 @@ def input_processor(state):
 
 def print_status(scouts, initial_display, jobs):
     global status
+    global default_log_level
 
     state = {
         'page': 1,
         'display': initial_display
     }
+
+    default_log_level = logging.getLogger().getEffectiveLevel()
+    if initial_display != 'logs':
+        logging.getLogger().setLevel(logging.CRITICAL)
+    
     # Start another thread to get user input.
     t = Thread(target=input_processor,
                name='input_processor',
@@ -93,7 +100,7 @@ def print_scouts(lines, state, scouts):
         active = 'Yes' if scout_guard.active else 'No'
         if cfg_get('proxies'):
             return line_tmpl.format(current_line, scout.username, scout.proxy_url,
-                                    warn_str, active,
+                                    hr_tstamp(scout.start_time), warn_str, active,
                                     scout.total_encounters,
                                     "{:5.1f}".format(scout.encounters_per_hour),
                                     scout.errors,
@@ -102,7 +109,7 @@ def print_scouts(lines, state, scouts):
         else:
             return line_tmpl.format(current_line,
                                     scout.username,
-                                    warn_str, active,
+                                    hr_tstamp(scout.start_time), warn_str, active,
                                     scout.total_encounters,
                                     "{:5.1f}".format(scout.encounters_per_hour),
                                     scout.errors,
@@ -113,13 +120,13 @@ def print_scouts(lines, state, scouts):
                               map(lambda s: len(s.acc.username), scouts)))
     len_num = str(len(str(len(scouts))))
     if cfg_get('proxies'):
-        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:25} | {:4} | {:6} | {:10} | {:5} | {:6} |{:14} | {}'
+        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:25} | {:8} | {:4} | {:6} | {:10} | {:5} | {:6} |{:14} | {}'
         lines.append(
-            line_tmpl.format('#', 'Scout', 'Proxy', 'Warn', 'Active', 'Encounters', 'Enc/h', 'Errors',
+            line_tmpl.format('#', 'Scout', 'Proxy', 'Start', 'Warn', 'Active', 'Encounters', 'Enc/h', 'Errors',
                              'Last Encounter', 'Message'))
     else:
-        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:4} | {:6} | {:10} | {:5} | {:6} | {:14} | {}'
-        lines.append(line_tmpl.format('#', 'Scout', 'Warn', 'Active', 'Encounters', 'Enc/h', 'Errors',
+        line_tmpl = u'{:' + len_num + '} | {:' + len_username + '} | {:8} | {:4} | {:6} | {:10} | {:5} | {:6} | {:14} | {}'
+        lines.append(line_tmpl.format('#', 'Scout', 'Start', 'Warn', 'Active', 'Encounters', 'Enc/h', 'Errors',
                                       'Last Encounter', 'Message'))
     return print_lines(lines, scout_line, scouts, 4, state)
 
