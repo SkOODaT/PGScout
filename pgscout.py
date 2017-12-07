@@ -42,16 +42,21 @@ def have_active_scouts():
 
 @app.route("/iv", methods=['GET'])
 def get_iv():
+    error = None
     if not app_state.accept_new_requests:
-        return jsonify({
-            'success': False,
-            'error': 'Not accepting new requests.'
-        })
-
+        error = 'Not accepting new requests.'
     if not have_active_scouts():
+        error = 'No active scout available. All banned?'
+    max_queued_jobs = cfg_get('max_queued_jobs')
+    num_jobs = jobs.qsize()
+    if max_queued_jobs and num_jobs >= max_queued_jobs:
+        error = "Job queue full ({} items). Perform less encounters or add more scouts.".format(num_jobs)
+
+    if error:
+        log.warning(error)
         return jsonify({
             'success': False,
-            'error': 'No active scout available. All banned?'
+            'error': error
         })
 
     pokemon_id = request.args["pokemon_id"]
@@ -62,6 +67,7 @@ def get_iv():
     encounter_id = normalize_encounter_id(request.args.get("encounter_id"))
     # Spawn point ID is assumed to be a hex string
     spawn_point_id = request.args.get("spawn_point_id")
+    despawn_time = request.args.get("despawn_time")
 
     # Check cache
     cache_key = encounter_id if encounter_id else "{}-{}-{}".format(pokemon_id, lat, lng)
@@ -72,7 +78,7 @@ def get_iv():
         return jsonify(result)
 
     # Create a ScoutJob
-    job = ScoutJob(pokemon_id, encounter_id, spawn_point_id, lat, lng)
+    job = ScoutJob(pokemon_id, encounter_id, spawn_point_id, lat, lng, despawn_time=despawn_time)
 
     # Enqueue and wait for job to be processed
     jobs.put(job)

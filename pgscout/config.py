@@ -45,6 +45,13 @@ def parse_args():
     parser.add_argument('-l', '--level', type=int, default=30,
                         help='Minimum trainer level required. Lower levels will yield an error.')
 
+    parser.add_argument('-mqj', '--max-queued-jobs', type=int, default=0,
+                        help='Maximum number of queued scout jobs before rejecting new jobs. 0 (default) means no restriction.')
+
+    parser.add_argument('-mjttl', '--max-job-ttl', type=int, default=0,
+                        help='Maximum number of minutes a job is allowed to be queued before it expires (Time-To-Live). '
+                             'Expired jobs will be rejected when it''s their turn. 0 (default) means no restriction.')
+
     parser.add_argument('-sb', '--shadowban-threshold', type=int, default=5,
                         help='Mark an account as shadowbanned after this many errors. ' +
                              'If --pgpool_url is specified the account gets swapped out.')
