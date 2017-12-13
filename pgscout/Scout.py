@@ -250,16 +250,41 @@ class Scout(POGOAccount):
             'catch_prob_2': probs[1],
             'catch_prob_3': probs[2],
             'scout_level': scout_level,
-            'encountered_time': time.time()
+            'encountered_time': time.time(),
+            'previous_id': pokemon_info.pokemon_id
         }
+
+        # Weather Pokemon Bonus
+        weather = pokemon_info.pokemon_display.weather_boosted_condition
+        gameplayweather = ''
+        # GamePlay Condition Log
+        if weather == 0:
+            gameplayweather = 'NOWEATHER'
+        elif weather == 1:
+            gameplayweather = 'CLEAR'
+        elif weather == 2:
+            gameplayweather = 'RAINY'
+        elif weather == 3:
+            gameplayweather = 'PARTLY CLOUDY'
+        elif weather == 4:
+            gameplayweather = 'OVERCAST'
+        elif weather == 5:
+            gameplayweather = 'WINDY'
+        elif weather == 6:
+            gameplayweather = 'SNOW'
+        elif weather == 7:
+            gameplayweather = 'FOG'
+
+        if weather >= 1:
+            responses['weather_id'] = weather
 
         # Add form of Unown
         if job.pokemon_id == 201:
             responses['form'] = pokemon_info.pokemon_display.form
 
         self.log_info(
-            u"Found a {:.1f}% ({}/{}/{}) L{} {} with {} CP (scout level {}).".format(
-                iv, at, df, st, pokemon_level, job.pokemon_name, cp, scout_level))
+            u"Found a {:.1f}% ({}/{}/{}) L{} {} with {} CP, {} Bonus, (scout level {}).".format(
+                iv, at, df, st, pokemon_level, job.pokemon_name, cp, gameplayweather, scout_level))
         inc_for_pokemon(job.pokemon_id)
         return responses
 
