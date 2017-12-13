@@ -228,6 +228,10 @@ class Scout(POGOAccount):
                                             pokemon_info.move_1,
                                             pokemon_info.move_2)
 
+
+        # Weather Pokemon Bonus
+        weather = pokemon_info.pokemon_display.weather_boosted_condition
+
         responses = {
             'success': True,
             'encounter_id': job.encounter_id,
@@ -251,13 +255,12 @@ class Scout(POGOAccount):
             'catch_prob_3': probs[2],
             'scout_level': scout_level,
             'encountered_time': time.time(),
-            'previous_id': pokemon_info.pokemon_id
+            'previous_id': pokemon_info.pokemon_id,
+            'weather_id': weather
         }
 
-        # Weather Pokemon Bonus
-        weather = pokemon_info.pokemon_display.weather_boosted_condition
+        # GamePlay Weather Condition Log
         gameplayweather = ''
-        # GamePlay Condition Log
         if weather == 0:
             gameplayweather = 'NOWEATHER'
         elif weather == 1:
@@ -274,9 +277,6 @@ class Scout(POGOAccount):
             gameplayweather = 'SNOW'
         elif weather == 7:
             gameplayweather = 'FOG'
-
-        if weather >= 1:
-            responses['weather_id'] = weather
 
         # Add form of Unown
         if job.pokemon_id == 201:
