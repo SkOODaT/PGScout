@@ -8,6 +8,7 @@ from mrmime.shadowbans import COMMON_POKEMON
 from mrmime.utils import jitter_location
 from pgoapi.exceptions import AuthException, BannedAccountException
 from pgoapi.protos.pogoprotos.networking.responses.encounter_response_pb2 import *
+from pgoapi.protos.pogoprotos.map.weather.gameplay_weather_pb2 import *
 
 from pgscout.config import cfg_get
 from pgscout.moveset_grades import get_moveset_grades
@@ -227,11 +228,6 @@ class Scout(POGOAccount):
         moveset_grades = get_moveset_grades(job.pokemon_id, job.pokemon_name,
                                             pokemon_info.move_1,
                                             pokemon_info.move_2)
-
-
-        # Weather Pokemon Bonus
-        weather = pokemon_info.pokemon_display.weather_boosted_condition
-
         responses = {
             'success': True,
             'encounter_id': job.encounter_id,
@@ -255,36 +251,21 @@ class Scout(POGOAccount):
             'catch_prob_3': probs[2],
             'scout_level': scout_level,
             'encountered_time': time.time(),
-            'previous_id': pokemon_info.pokemon_id,
-            'weather_id': weather
+            'weather_id': pokemon_info.pokemon_display.weather_boosted_condition
         }
-
-        # GamePlay Weather Condition Log
-        gameplayweather = ''
-        if weather == 0:
-            gameplayweather = 'NOWEATHER'
-        elif weather == 1:
-            gameplayweather = 'CLEAR'
-        elif weather == 2:
-            gameplayweather = 'RAINY'
-        elif weather == 3:
-            gameplayweather = 'PARTLY CLOUDY'
-        elif weather == 4:
-            gameplayweather = 'OVERCAST'
-        elif weather == 5:
-            gameplayweather = 'WINDY'
-        elif weather == 6:
-            gameplayweather = 'SNOW'
-        elif weather == 7:
-            gameplayweather = 'FOG'
 
         # Add form of Unown
         if job.pokemon_id == 201:
             responses['form'] = pokemon_info.pokemon_display.form
+        # Add Previous ID Ditto
+        if job.pokemon_id == 132:
+            responses['previous_id'] = pokemon_info.pokemon_id
 
         self.log_info(
             u"Found a {:.1f}% ({}/{}/{}) L{} {} with {} CP, {} Bonus, (scout level {}).".format(
-                iv, at, df, st, pokemon_level, job.pokemon_name, cp, gameplayweather, scout_level))
+                iv, at, df, st, pokemon_level, job.pokemon_name, cp,
+                GameplayWeather.WeatherCondition.Name(pokemon_info.pokemon_display.weather_boosted_condition),
+                scout_level))
         inc_for_pokemon(job.pokemon_id)
         return responses
 
