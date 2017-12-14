@@ -250,13 +250,18 @@ class Scout(POGOAccount):
             'catch_prob_2': probs[1],
             'catch_prob_3': probs[2],
             'scout_level': scout_level,
-            'encountered_time': time.time(),
-            'weather_id': pokemon_info.pokemon_display.weather_boosted_condition
+            'encountered_time': time.time()
         }
 
         # Add form of Unown
         if job.pokemon_id == 201:
             responses['form'] = pokemon_info.pokemon_display.form
+
+        weather_id = pokemon_info.pokemon_display.weather_boosted_condition
+        # Weather Pokemon Bonus
+        if weather_id >= 1:
+            responses['weather_id'] = weather_id
+
         # Add Previous ID Ditto
         if job.pokemon_id == 132:
             responses['previous_id'] = pokemon_info.pokemon_id
@@ -264,7 +269,7 @@ class Scout(POGOAccount):
         self.log_info(
             u"Found a {:.1f}% ({}/{}/{}) L{} {} with {} CP, {} Bonus, (scout level {}).".format(
                 iv, at, df, st, pokemon_level, job.pokemon_name, cp,
-                GameplayWeather.WeatherCondition.Name(pokemon_info.pokemon_display.weather_boosted_condition),
+                GameplayWeather.WeatherCondition.Name(weather_id),
                 scout_level))
         inc_for_pokemon(job.pokemon_id)
         return responses
