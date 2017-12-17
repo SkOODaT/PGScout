@@ -27,7 +27,7 @@ def cleanup_cache():
     num_deleted = 0
     for encounter_id in encounter_cache.keys():
         encounter = encounter_cache[encounter_id]
-        if now - encounter['encountered_time'] > 60 * 1:
+        if now - encounter['encountered_time'] > 60 * 60:
             del encounter_cache[encounter_id]
             num_deleted += 1
     cache_lock.release()
