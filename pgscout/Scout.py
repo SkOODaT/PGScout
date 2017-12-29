@@ -252,7 +252,9 @@ class Scout(POGOAccount):
             'catch_prob_2': probs[1],
             'catch_prob_3': probs[2],
             'scout_level': scout_level,
-            'encountered_time': time.time()
+            'encountered_time': time.time(),
+            'weather_id': None,
+            'previous_id': None
         }
 
         # Add form of Unown
