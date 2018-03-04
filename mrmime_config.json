@@ -1,0 +1,8 @@
+{
+  "full_login_flow": false,
+  "download_assets_and_items": true,
+  "request_retry_delay": 0.5,
+  "encounter_delay": 0.1,
+  "min_request_delay": 0.1,
+  "pgpool_update_interval": 60
+}
